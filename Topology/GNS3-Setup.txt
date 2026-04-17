@@ -1,0 +1,123 @@
+! ============================================
+! GNS3 Topology Setup Information
+! Secure Branch Office Network Lab
+! ============================================
+
+! ============================================
+! Device Console Ports
+! ============================================
+
+| Device | Type   | Console Address               |
+|--------|--------|-------------------------------|
+| IOU1   | telnet | 192.168.188.128:5000          |
+| IOU2   | telnet | 192.168.188.128:5001          |
+| IOU3   | telnet | 192.168.188.128:5002          |
+| PC1    | telnet | localhost:5002                |
+| PC2    | telnet | localhost:5004                |
+| PC3    | telnet | localhost:5006                |
+| PC4    | telnet | localhost:5008                |
+| PC5    | telnet | localhost:5010                |
+
+! ============================================
+! Device Roles
+! ============================================
+
+- IOU1 : MLSCore (Multilayer Switch Core) - الدور: التوجيه بين الـ VLANs
+- IOU2 : Access Switch (عليه PC1, PC2) - الدور: توصيل أجهزة Staff و Guest
+- IOU3 : Access Switch (عليه PC3, PC4) - الدور: توصيل أجهزة Staff و Guest
+- PC1  : Staff (VLAN 10) - موظف
+- PC2  : Guest (VLAN 20) - ضيف/زائر
+- PC3  : Staff (VLAN 10) - موظف
+- PC4  : Guest (VLAN 20) - ضيف/زائر
+- PC5  : Management (VLAN 30) - جهاز الإدارة
+
+! ============================================
+! Connections
+! ============================================
+
+! IOU1 (MLSCore) Connections:
+- e1/0   -> PC5 (Management PC)
+- e0/0   -> IOU2 (via Po1 - Port-channel 1)
+- e0/1   -> IOU2 (via Po1 - Port-channel 1)
+- e0/2   -> IOU3 (via Po2 - Port-channel 2)
+- e0/3   -> IOU3 (via Po2 - Port-channel 2)
+
+! IOU2 (Access Switch) Connections:
+- e0/0   -> IOU1 (via Po1 - Port-channel 1)
+- e0/1   -> IOU1 (via Po1 - Port-channel 1)
+- e0/2   -> PC1 (Staff - VLAN 10)
+- e0/3   -> PC2 (Guest - VLAN 20)
+
+! IOU3 (Access Switch) Connections:
+- e0/0   -> IOU1 (via Po2 - Port-channel 2)
+- e0/1   -> IOU1 (via Po2 - Port-channel 2)
+- e0/2   -> PC3 (Staff - VLAN 10)
+- e0/3   -> PC4 (Guest - VLAN 20)
+
+! ============================================
+! EtherChannel Groups (LACP)
+! ============================================
+
+- Po1 (Port-channel 1) : IOU1 <--> IOU2 (بين 2 منافذ)
+- Po2 (Port-channel 2) : IOU1 <--> IOU3 (بين 2 منافذ)
+
+! ============================================
+! VLAN Assignments
+! ============================================
+
+| VLAN | Name         | Devices                          |
+|------|--------------|----------------------------------|
+| 10   | Staff        | PC1, PC3                         |
+| 20   | Guest        | PC2, PC4                         |
+| 30   | Management   | PC5, IOU1, IOU2, IOU3 (SVI)      |
+
+! ============================================
+! GNS3 VM Information
+! ============================================
+
+- Server: GNS3 VM
+- Server IP: 192.168.188.128
+- CPU Usage: 1.1%
+- RAM Usage: 19.6%
+- Host: MuhammedElazab (CPU 8.9%, RAM 65.5%)
+
+! ============================================
+! Access Instructions
+! ============================================
+
+! طريقة 1: الوصول عن طريق Telnet من جهازك المضيف:
+
+! لأجهزة IOU:
+telnet 192.168.188.128 5000   ! IOU1 (MLS Core)
+telnet 192.168.188.128 5001   ! IOU2
+telnet 192.168.188.128 5002   ! IOU3
+
+! لأجهزة VPCS:
+telnet localhost 5002          ! PC1
+telnet localhost 5004          ! PC2
+telnet localhost 5006          ! PC3
+telnet localhost 5008          ! PC4
+telnet localhost 5010          ! PC5
+
+! طريقة 2: الوصول عن طريق SSH (من أي جهاز في الشبكة):
+
+! من PC5 (Management) أو أي جهاز Staff:
+ssh -l Soliman 192.168.30.1   ! IOU1
+ssh -l Soliman 192.168.30.2   ! IOU2
+ssh -l Soliman 192.168.30.3   ! IOU3
+
+! الباسورد: 1234
+
+! ============================================
+! Notes
+! ============================================
+
+! 1. VPCS لا يدعم SSH، فقط ping و ip و show
+! 2. الـ SSH شغال على الـ Management IPs (VLAN 30)
+! 3. Guest VLAN (20) ممنوع من الوصول لـ Management VLAN (30) بواسطة ACL
+! 4. Staff VLAN (10) مسموح له بالوصول لـ Management VLAN (30)
+! 5. Port Security مفعل على منفذ PC5 (sticky MAC)
+
+! ============================================
+! End of File
+! ============================================
